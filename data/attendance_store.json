@@ -1,0 +1,372 @@
+{
+  "user": {
+    "name": "Sadee",
+    "fullName": "Sadee Wickramasinghe",
+    "email": "sadee.itum@gmail.com",
+    "studentId": "ITUM/NDT/2024/IT/042",
+    "batch": "NDT 2024/2026",
+    "department": "Division of Information Technology",
+    "institution": "Institute of Technology, University of Moratuwa (ITUM)",
+    "semester": 3,
+    "currentWeek": 12,
+    "totalWeeks": 15,
+    "threshold": 80.0
+  },
+  "modules": [
+    {
+      "id": "maths",
+      "name": "Maths",
+      "fullName": "Engineering Mathematics III",
+      "code": "IT2101",
+      "scheduledDays": [
+        1,
+        4
+      ],
+      "timeSlots": {
+        "1": "08:30 - 10:30",
+        "4": "08:30 - 10:30"
+      },
+      "plannedSessions": 15,
+      "credits": 3
+    },
+    {
+      "id": "web_tech",
+      "name": "Web Tech",
+      "fullName": "Web Application Development",
+      "code": "IT2102",
+      "scheduledDays": [
+        1,
+        4
+      ],
+      "timeSlots": {
+        "1": "10:45 - 12:45",
+        "4": "10:45 - 12:45"
+      },
+      "plannedSessions": 15,
+      "credits": 3
+    },
+    {
+      "id": "ooad",
+      "name": "OOAD",
+      "fullName": "Object-Oriented Analysis & Design",
+      "code": "IT2103",
+      "scheduledDays": [
+        1,
+        5
+      ],
+      "timeSlots": {
+        "1": "01:30 - 03:30",
+        "5": "10:45 - 12:45"
+      },
+      "plannedSessions": 15,
+      "credits": 3
+    },
+    {
+      "id": "network",
+      "name": "Network",
+      "fullName": "Data Communication & Computer Networks",
+      "code": "IT2104",
+      "scheduledDays": [
+        2,
+        5
+      ],
+      "timeSlots": {
+        "2": "08:30 - 10:30",
+        "5": "08:30 - 10:30"
+      },
+      "plannedSessions": 15,
+      "credits": 3
+    },
+    {
+      "id": "se",
+      "name": "SE",
+      "fullName": "Software Engineering & Lifecycle",
+      "code": "IT2105",
+      "scheduledDays": [
+        2
+      ],
+      "timeSlots": {
+        "2": "10:45 - 12:45"
+      },
+      "plannedSessions": 15,
+      "credits": 3
+    },
+    {
+      "id": "digital_elec",
+      "name": "Digital Electronics",
+      "fullName": "Digital Electronics & Microprocessors",
+      "code": "IT2106",
+      "scheduledDays": [
+        2
+      ],
+      "timeSlots": {
+        "2": "01:30 - 04:30"
+      },
+      "plannedSessions": 15,
+      "credits": 4
+    },
+    {
+      "id": "oop",
+      "name": "OOP",
+      "fullName": "Object Oriented Programming in Java",
+      "code": "IT2107",
+      "scheduledDays": [
+        3,
+        5
+      ],
+      "timeSlots": {
+        "3": "08:30 - 10:30",
+        "5": "01:30 - 03:30"
+      },
+      "plannedSessions": 15,
+      "credits": 3
+    },
+    {
+      "id": "digital_forensic",
+      "name": "Digital Forensic",
+      "fullName": "Digital Forensics & Cyber Security",
+      "code": "IT2108",
+      "scheduledDays": [
+        3
+      ],
+      "timeSlots": {
+        "3": "10:45 - 12:45"
+      },
+      "plannedSessions": 15,
+      "credits": 3
+    },
+    {
+      "id": "english",
+      "name": "English",
+      "fullName": "Professional English & Communication",
+      "code": "CM2101",
+      "scheduledDays": [
+        3
+      ],
+      "timeSlots": {
+        "3": "01:30 - 03:30"
+      },
+      "plannedSessions": 15,
+      "credits": 2
+    },
+    {
+      "id": "aesthetic",
+      "name": "Aesthetic",
+      "fullName": "Aesthetic Studies & Social Ethics",
+      "code": "CM2102",
+      "scheduledDays": [
+        4
+      ],
+      "timeSlots": {
+        "4": "01:30 - 03:30"
+      },
+      "plannedSessions": 15,
+      "credits": 2
+    }
+  ],
+  "base_aggregates": {
+    "maths": {
+      "present": 10,
+      "unexcused": 1,
+      "safe": 0
+    },
+    "web_tech": {
+      "present": 9,
+      "unexcused": 1,
+      "safe": 1
+    },
+    "ooad": {
+      "present": 9,
+      "unexcused": 2,
+      "safe": 1
+    },
+    "network": {
+      "present": 10,
+      "unexcused": 1,
+      "safe": 0
+    },
+    "se": {
+      "present": 10,
+      "unexcused": 1,
+      "safe": 0
+    },
+    "digital_elec": {
+      "present": 8,
+      "unexcused": 2,
+      "safe": 1
+    },
+    "oop": {
+      "present": 11,
+      "unexcused": 1,
+      "safe": 0
+    },
+    "digital_forensic": {
+      "present": 10,
+      "unexcused": 1,
+      "safe": 0
+    },
+    "english": {
+      "present": 11,
+      "unexcused": 0,
+      "safe": 0
+    },
+    "aesthetic": {
+      "present": 10,
+      "unexcused": 0,
+      "safe": 1
+    }
+  },
+  "attendance_logs": {
+    "2026-11-02": {
+      "date": "2026-11-02",
+      "notes": "",
+      "records": {
+        "maths": {
+          "status": "present",
+          "isMedical": false
+        },
+        "web_tech": {
+          "status": "present",
+          "isMedical": false
+        },
+        "ooad": {
+          "status": "present",
+          "isMedical": false
+        }
+      }
+    },
+    "2026-11-03": {
+      "date": "2026-11-03",
+      "notes": "",
+      "records": {
+        "network": {
+          "status": "present",
+          "isMedical": false
+        },
+        "se": {
+          "status": "present",
+          "isMedical": false
+        },
+        "digital_elec": {
+          "status": "present",
+          "isMedical": false
+        }
+      }
+    },
+    "2026-11-04": {
+      "date": "2026-11-04",
+      "notes": "",
+      "records": {
+        "oop": {
+          "status": "present",
+          "isMedical": false
+        },
+        "digital_forensic": {
+          "status": "present",
+          "isMedical": false
+        },
+        "english": {
+          "status": "present",
+          "isMedical": false
+        }
+      }
+    },
+    "2026-11-05": {
+      "date": "2026-11-05",
+      "notes": "",
+      "records": {
+        "maths": {
+          "status": "present",
+          "isMedical": false
+        },
+        "web_tech": {
+          "status": "present",
+          "isMedical": false
+        },
+        "aesthetic": {
+          "status": "present",
+          "isMedical": false
+        }
+      }
+    },
+    "2026-11-06": {
+      "date": "2026-11-06",
+      "notes": "",
+      "records": {
+        "network": {
+          "status": "present",
+          "isMedical": false
+        },
+        "ooad": {
+          "status": "present",
+          "isMedical": false
+        },
+        "oop": {
+          "status": "present",
+          "isMedical": false
+        }
+      }
+    },
+    "2026-11-09": {
+      "date": "2026-11-09",
+      "notes": "MC submitted for OOAD",
+      "records": {
+        "maths": {
+          "status": "present",
+          "isMedical": false
+        },
+        "web_tech": {
+          "status": "present",
+          "isMedical": false
+        },
+        "ooad": {
+          "status": "absent",
+          "isMedical": true,
+          "mcRef": "MC-ITUM-2026-1109"
+        }
+      }
+    },
+    "2026-11-10": {
+      "date": "2026-11-10",
+      "notes": "",
+      "records": {
+        "network": {
+          "status": "present",
+          "isMedical": false
+        },
+        "se": {
+          "status": "present",
+          "isMedical": false
+        },
+        "digital_elec": {
+          "status": "present",
+          "isMedical": false
+        }
+      }
+    },
+    "2026-11-11": {
+      "date": "2026-11-11",
+      "notes": "",
+      "records": {
+        "oop": {
+          "status": "present",
+          "isMedical": false
+        },
+        "digital_forensic": {
+          "status": "present",
+          "isMedical": false
+        },
+        "english": {
+          "status": "present",
+          "isMedical": false
+        }
+      }
+    }
+  },
+  "holidays": {
+    "2026-10-25": "Vap Full Moon Poya Day",
+    "2026-11-08": "Deepavali Festival Day",
+    "2026-11-24": "Il Full Moon Poya Day",
+    "2026-12-25": "Christmas Day"
+  }
+}

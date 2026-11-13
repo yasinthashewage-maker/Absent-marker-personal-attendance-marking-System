@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌿 ABSENT MARKER - ITUM Student Attendance Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- ==================== LANDING PAGE ==================== -->
+  <section id="landing-view" class="view-section active">
+    <header class="landing-header">
+      <div class="landing-brand">
+        <span class="brand-logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 40 40" fill="none">
+            <path d="M19.7 34.5c1.1-9.2 4.7-17.5 12.2-25.3C19.2 10.1 12.5 16.3 14 25.1c.4 2.4 2.4 4.1 5.7 4.6" fill="#79B84A"/>
+            <path d="M16.8 33.9C13.1 25.1 9.8 19.7 6.1 15.6c8.4 1.4 14.1 6.3 15 13.3" fill="#A2CD69"/>
+            <path d="M13.8 32.5c5.8-8 10.3-12.5 17-17.1" stroke="#528C45" stroke-width="1.7" stroke-linecap="round"/>
+            <path d="M19.7 31.7c-2.2-5.3-5.4-9.2-9.2-12" stroke="#6D9E4B" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <div class="brand-text-block">
+          <span class="brand-name">ABSENT MARKER - ITUM STUDENT PORTAL</span>
+        </div>
+      </div>
+      <div class="landing-header-actions">
+        <button class="btn btn-outline" id="nav-signin-btn">Sign In</button>
+        <button class="btn btn-primary" id="nav-register-btn">Register</button>
+      </div>
+    </header>
+
+    <main class="landing-hero-container">
+      <h1 class="hero-title">
+        Mark The Absent Days and <span class="text-gradient">Get Eligible</span> for the Exam
+      </h1>
+
+      <p class="hero-subtitle">
+        Automated Absent Day Calculator with Safe Medical Certificate Log. Never
+        get barred from your <span class="plain-itum">ITUM</span> semester finals.
+      </p>
+
+      <!-- Feature Cards Grid (3 cards matching mockup) -->
+      <section class="feature-cards-grid">
+        <article class="feature-card">
+          <div class="feature-icon-wrapper icon-green">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          </div>
+          <h3 class="feature-card-title">Percentage of attendance</h3>
+          <p class="feature-card-desc">Real-time automated percentage calculator for all 10 ITUM modules Dynamic 80% threshold tracking with auto-deductions for weekends &amp; public holidays.</p>
+          <div class="feature-card-footer"><span class="stat-pill stat-green">10 Modules Covered</span></div>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon-wrapper icon-teal">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h3 class="feature-card-title">Medical Certificate log</h3>
+          <p class="feature-card-desc">Instantly turn missed sessions into <strong>Safe Absents</strong>. Medical certificates adjust planned effective sessions so illness never penalizes your exam eligibility.</p>
+          <div class="feature-card-footer"><span class="stat-pill stat-blue">Safe Absent Protection</span></div>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon-wrapper icon-amber">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>
+          </div>
+          <h3 class="feature-card-title">Early Warning</h3>
+          <p class="feature-card-desc">Proactive alerts when your attendance nears 80%. Know the exact number of safe absences you can take before risk kicks in.</p>
+          <div class="feature-card-footer"><span class="stat-pill stat-amber">Zero Exam Surprises</span></div>
+        </article>
+      </section>
+    </main>
+  </section>
+
+  <!-- ==================== SIGN IN & REGISTRATION MODAL ==================== -->
+  <div id="signin-modal" class="modal-overlay modal-backdrop hidden" style="display:none;" aria-hidden="true">
+    <div class="modal-card" style="width:100%; max-width:440px;">
+      <button class="modal-close" data-close-modal="signin-modal" id="btn-close-auth-modal" aria-label="Close modal">&times;</button>
+      
+      <div class="auth-tabs modal-tabs-header">
+        <div class="auth-tab modal-tab active" data-tab="signin" id="tab-btn-signin">Sign In</div>
+        <div class="auth-tab modal-tab" data-tab="register" id="tab-btn-register">Register</div>
+      </div>
+
+      <!-- Sign In Tab Panel -->
+      <div id="tab-signin" class="tab-panel">
+        <form id="signin-form">
+          <div class="form-group">
+            <label for="signin-email">Student Email</label>
+            <input type="text" id="signin-email" class="form-control" placeholder="name@gmail.com" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="signin-password">Password</label>
+            <input type="password" id="signin-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn-auth-submit">Sign In</button>
+        </form>
+      </div>
+
+      <!-- Register Tab Panel -->
+      <div id="tab-register" class="tab-panel" style="display:none;">
+        <form id="register-form">
+          <div class="form-group">
+            <label for="reg-name">Full Name</label>
+            <input type="text" id="reg-name" class="form-control" placeholder="e.g. Sadee Wickramasinghe" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Student Email</label>
+            <input type="text" id="reg-email" class="form-control" placeholder="name@gmail.com" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" class="form-control" placeholder="••••••••" required autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label for="reg-number">Registration Number</label>
+            <input type="text" id="reg-number" class="form-control" placeholder="" autocomplete="off">
+          </div>
+          <button type="submit" class="btn-auth-submit">Register</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN APP SHELL ==================== -->
+  <div id="app-shell" class="app-layout hidden">
+    <header class="top-navbar">
+      <div class="navbar-left">
+        <button class="btn-sidebar-toggle" id="btn-toggle-sidebar" aria-label="Toggle Navigation">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
+        <div class="nav-brand">
+          <span class="brand-logo-icon">🌿</span>
+          <span class="brand-title">ABSENT MARKER</span>
+          <span class="brand-pill">ITUM</span>
+        </div>
+      </div>
+      <div class="navbar-search">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="global-search-input" placeholder="Search modules, dates..." autocomplete="off">
+          <span class="search-shortcut">⌘K</span>
+        </div>
+        <div id="search-results-dropdown" class="search-results-box hidden"></div>
+      </div>
+      <div class="navbar-right">
+        <div class="notification-wrapper" style="position:relative;">
+          <button class="nav-icon-btn" id="btn-notifications" aria-label="Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notification-badge" id="notification-count">2</span>
+          </button>
+          <div id="notification-dropdown" class="notification-dropdown hidden">
+            <div class="notification-header"><h4>Attendance Alerts</h4><span class="badge-mini badge-amber">2 Active</span></div>
+            <div class="notification-list" id="notification-items-container"></div>
+          </div>
+        </div>
+        <button class="nav-icon-btn dark-mode-toggle" id="app-theme-toggle" aria-label="Toggle Theme"><span class="theme-icon">🌙</span></button>
+        <div class="user-profile-wrapper">
+          <div class="user-badge" id="user-profile-trigger">
+            <div class="user-avatar">S</div>
+            <div class="user-info-text">
+              <span class="user-greeting">Hi <strong id="nav-user-name">Sadee</strong>!</span>
+              <span class="user-subtext">ITUM • Week 12</span>
+            </div>
+            <svg class="dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+          <div id="user-dropdown-menu" class="user-dropdown-menu hidden">
+            <div class="user-dropdown-header">
+              <strong id="menu-user-fullname">Sadee Wickramasinghe</strong>
+              <small id="menu-user-email">sadee.itum@gmail.com</small>
+            </div>
+            <hr class="dropdown-divider">
+            <span class="dropdown-item nav-link-trigger" data-nav="settings" style="cursor:pointer;">⚙️ Settings &amp; Accounts</span>
+            <hr class="dropdown-divider">
+            <span class="dropdown-item text-danger" id="logout-btn" style="cursor:pointer;">🚪 Sign Out</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="app-body-container">
+      <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-inner">
+          <div class="sidebar-user-card">
+            <div class="sidebar-avatar-large">SW</div>
+            <div class="sidebar-user-details">
+              <h4 id="sidebar-user-fullname">Sadee Wickramasinghe</h4>
+              <p>NDT IT • Sem 3 (Week 12)</p>
+            </div>
+          </div>
+          <nav class="sidebar-nav">
+            <span class="nav-section-title">MAIN NAVIGATION</span>
+            <ul class="nav-links">
+              <li><span class="sidebar-nav-item active" data-nav="dashboard" style="cursor:pointer;"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span><span class="nav-indicator"></span></span></li>
+              <li><span class="sidebar-nav-item" data-nav="calendar" style="cursor:pointer;"><span class="nav-icon">📅</span><span class="nav-label">Calendar</span><span class="nav-badge-pill">Nov '26</span></span></li>
+              <li><span class="sidebar-nav-item" data-nav="modules" style="cursor:pointer;"><span class="nav-icon">📚</span><span class="nav-label">Modules</span><span class="nav-badge-counter">10</span></span></li>
+              <li><span class="sidebar-nav-item" data-nav="risk" style="cursor:pointer;"><span class="nav-icon">⚠️</span><span class="nav-label">Risk Modules</span><span class="nav-badge-alert" id="sidebar-risk-count">2</span></span></li>
+              <li><span class="sidebar-nav-item" data-nav="settings" style="cursor:pointer;"><span class="nav-icon">⚙️</span><span class="nav-label">Settings &amp; Accounts</span></span></li>
+            </ul>
+          </nav>
+          <div class="sidebar-footer-card">
+            <div class="regulation-header"><span class="badge-mini badge-green">80% ITUM RULE</span></div>
+            <p class="regulation-text">Minimum 80% attendance required to sit exams. Medical Certificates logged as <strong>Safe Absents</strong> protect exam eligibility.</p>
+            <div class="regulation-progress">
+              <div class="reg-bar-track"><div class="reg-bar-fill" id="sidebar-progress-fill" style="width:90.7%;"></div></div>
+              <div class="reg-labels"><span>Avg: <strong id="sidebar-avg-text">90.7%</strong></span><span>Cutoff: 80%</span></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="app-content-area" id="main-content-scroll">
+
+        <!-- ==================== DASHBOARD ==================== -->
+        <section id="view-dashboard" class="sub-view-section active">
+          <section class="dashboard-welcome-banner">
+            <div class="welcome-copy">
+              <span class="welcome-session"><span class="session-dot"></span>Active Semester Session - ITUM Moratuwa</span>
+              <h1 class="dash-greeting-title" id="dashboard-greeting-text">Hi Sadee! Today is Thursday, 12 November 2026 — This is the 12th week</h1>
+              <p class="dash-greeting-subtitle" id="dashboard-status-text">Your attendance meets the 80% exam threshold in 8 of 10 modules. Check borderline warnings below.</p>
+            </div>
+            <button type="button" class="welcome-log-button" id="dashboard-log-attendance">
+              <span aria-hidden="true">▣</span> Log Today's Attendance
+            </button>
+          </section>
+
+          <section class="dashboard-timetable card">
+            <div class="dashboard-section-heading">
+              <div>
+                <h2 id="today-timetable-title">Thursday Timetable &amp; Day Status</h2>
+                <p id="today-timetable-subtitle">Scheduled ITUM lectures for today (12 November 2026)</p>
+              </div>
+              <button type="button" class="timetable-log-button" id="timetable-log-attendance">Log Today's Attendance</button>
+            </div>
+            <div class="dashboard-schedule-grid" id="today-schedule"></div>
+          </section>
+
+          <section class="dashboard-chart-card card">
+            <div class="dashboard-chart-heading">
+              <div>
+                <h2>Module Attendance Overview</h2>
+                <p>Comparative performance across all ITUM modules. The dashed line marks the mandatory <strong>80% exam threshold</strong>.</p>
+              </div>
+              <div class="chart-legend">
+                <span class="legend-item"><i class="legend-swatch legend-safe"></i>Safe (&ge;85%)</span>
+                <span class="legend-item"><i class="legend-swatch legend-warning"></i>Warning (80-84%)</span>
+                <span class="legend-item"><i class="legend-swatch legend-critical"></i>Critical (&lt;80%)</span>
+                <span class="legend-item"><i class="legend-threshold"></i>80% Threshold</span>
+              </div>
+            </div>
+            <div class="attendance-chart">
+              <div class="chart-y-axis" aria-hidden="true"><span>100%</span><span>80%</span><span>60%</span><span>40%</span><span>20%</span><span>0%</span></div>
+              <div class="chart-stage" id="module-bar-chart">
+                <div class="chart-plot">
+                  <div class="chart-grid-lines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                  <div class="threshold-line"><span class="threshold-label">80% EXAM ELIGIBILITY CUTOFF</span></div>
+                  <div class="bars-flex-container" id="chart-bars-container" role="list" aria-label="Attendance by module"></div>
+                </div>
+                <div class="chart-labels-container" id="chart-labels-container" aria-hidden="true"></div>
+              </div>
+            </div>
+          </section>
+
+        </section>
+
+        <!-- ==================== CALENDAR VIEW ==================== -->
+        <section id="view-calendar" class="sub-view-section hidden">
+          <div class="calendar-top-bar">
+            <div class="calendar-title-group">
+              <h2 class="view-title">Monthly Attendance Calendar</h2>
+              <p class="view-subtitle">Click any past or present weekday to log attendance or submit Medical Certificates.</p>
+            </div>
+            <div class="calendar-controls">
+              <div class="month-selector">
+                <button class="btn-icon-square" id="cal-prev-btn">◀</button>
+                <span class="current-month-display" id="calendar-month-label">November 2026</span>
+                <button class="btn-icon-square" id="cal-next-btn">▶</button>
+              </div>
+              <button class="btn btn-outline btn-sm" id="cal-today-btn">Go to Today</button>
+            </div>
+          </div>
+          <div class="calendar-rules-banner">
+            <div class="rule-chip"><span class="chip-color chip-gray"></span><strong>Sat &amp; Sun:</strong> Auto-styled as "Weekend"</div>
+            <div class="rule-chip"><span class="chip-color chip-purple"></span><strong>Public Holidays:</strong> Automatically excluded</div>
+            <div class="rule-chip"><span class="chip-color chip-green"></span><strong>Safe Absents:</strong> Medical certificate attached</div>
+          </div>
+          <div class="card calendar-card">
+            <div class="calendar-grid-body" id="calendar-grid"></div>
+          </div>
+          <div class="calendar-stats-footer" id="calendar-footer">
+            <div class="cal-stat-item"><span class="cal-stat-dot dot-green"></span><span>Conducted Weekdays: <strong>16 Days</strong></span></div>
+            <div class="cal-stat-item"><span class="cal-stat-dot dot-gray"></span><span>Weekends (Auto-Skipped): <strong>10 Days</strong></span></div>
+            <div class="cal-stat-item"><span class="cal-stat-dot dot-purple"></span><span>Public Holidays: <strong>2 Days</strong></span></div>
+          </div>
+        </section>
+
+        <!-- ==================== RISK MODULES ==================== -->
+        <section id="view-risk" class="sub-view-section hidden">
+          <div class="view-header-row">
+            <div><h2 class="view-title">Risk Modules &amp; Exam Eligibility Radar</h2><p class="view-subtitle">Modules nearing or falling below the 80% minimum attendance threshold.</p></div>
+            <div class="risk-filter-tabs">
+              <button class="tab-chip active" data-risk-filter="all">All Risk Subjects</button>
+              <button class="tab-chip" data-risk-filter="warning">Borderline (80–85%)</button>
+              <button class="tab-chip" data-risk-filter="critical">Critical (&lt;80%)</button>
+            </div>
+          </div>
+          <div class="alert-box alert-amber">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content"><strong>Early Warning Alert for Week 12:</strong><p>You have <strong id="risk-borderline-count">2 subjects</strong> on the borderline margin. Under ITUM regulations, students below 80% cannot register for end-of-semester examinations unless backed by valid Medical Certificates.</p></div>
+          </div>
+          <div class="risk-cards-grid" id="risk-cards-container"></div>
+          <div class="card simulator-card">
+            <div class="card-header">
+              <div><h3 class="card-title">Interactive Safe Absent Simulator</h3><p class="card-subtitle">Test how submitting a Medical Certificate adjusts your effective attendance.</p></div>
+              <span class="badge-mini badge-blue">ITUM Safe Absent Formula</span>
+            </div>
+            <div class="simulator-body">
+              <div class="sim-controls-row">
+                <div class="sim-control-group"><label>Choose Borderline Module:</label><select id="simulator-module-select" class="form-select"></select></div>
+                <div class="sim-control-group"><label>Unexcused Absents:</label><div class="stepper-box"><button type="button" class="btn-step" id="simulator-abs-dec">-</button><span id="sim-unexcused-display" class="step-value">2</span><button type="button" class="btn-step" id="simulator-abs-inc">+</button></div></div>
+                <div class="sim-control-group"><label>Convert to Safe Absent (MC):</label><label class="toggle-switch"><input type="checkbox" id="simulator-mc-toggle" checked><span class="slider round"></span></label></div>
+              </div>
+              <div class="sim-results-box" id="simulator-preview">
+                <div class="sim-formula-display">Formula: <code>Effective Attendance = [Present / (Total Conducted - Safe Absents)] × 100%</code></div>
+                <div class="sim-comparison-grid">
+                  <div class="sim-stat-box"><span class="sim-box-title">WITHOUT MEDICAL CERTIFICATE</span><span class="sim-large-pct" id="sim-raw-pct">--</span><span class="sim-status-tag" id="sim-raw-status">Select a module</span></div>
+                  <div class="sim-stat-arrow">➔</div>
+                  <div class="sim-stat-box"><span class="sim-box-title">WITH SAFE ABSENT (MC LOGGED)</span><span class="sim-large-pct text-success" id="sim-effective-pct">--</span><span class="sim-status-tag" id="sim-effective-status">Select a module</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== MODULES VIEW ==================== -->
+        <section id="view-modules" class="sub-view-section hidden">
+          <div class="view-header-row">
+            <div><h2 class="view-title">All 10 Modules Configuration</h2><p class="view-subtitle">Complete overview of ITUM semester subjects, session breakdown, and eligibility status.</p></div>
+            <div class="modules-action-bar">
+              <input type="text" id="modules-search" class="search-mini" placeholder="Filter modules...">
+              <button class="btn btn-outline btn-sm" id="modules-export-btn">📄 Export Report</button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <div class="table-responsive">
+              <table class="data-table" id="all-modules-table">
+                <thead><tr><th>Module Code &amp; Name</th><th>Credits</th><th>Conducted</th><th>Present</th><th>Unexcused</th><th>Safe (MC)</th><th>Effective</th><th>Attendance %</th><th>Allowed Left</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody id="modules-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== SETTINGS ==================== -->
+        <section id="view-settings" class="sub-view-section hidden">
+          <div class="view-header-row"><div><h2 class="view-title">Settings &amp; Student Profile</h2><p class="view-subtitle">Manage personal student information and academic semester parameters.</p></div></div>
+          <div class="settings-grid">
+            <div class="card settings-card">
+              <div class="card-header"><h3 class="card-title">Personal ITUM Profile</h3></div>
+              <form id="settings-form" class="settings-form">
+                <div class="form-group"><label>Full Name</label><input type="text" id="settings-name" value="Sadee Wickramasinghe" class="form-input"></div>
+                <div class="form-group"><label>Email Address</label><input type="email" id="settings-email" value="sadee.itum@gmail.com" class="form-input"></div>
+                <div class="form-group"><label>ITUM Registration Number</label><input type="text" id="settings-reg" value="ITUM/NDT/2024/IT/042" class="form-input"></div>
+                <div class="form-group"><label>Academic Department</label><input type="text" id="settings-dept" value="Division of Information Technology" class="form-input" readonly></div>
+                <button type="submit" class="btn btn-primary">Save Profile Changes</button>
+              </form>
+            </div>
+            <div class="card settings-card">
+              <div class="card-header"><h3 class="card-title">Academic Semester Rules</h3></div>
+              <div class="settings-form">
+                <div class="form-group"><label>Current Semester Week</label><div class="input-inline"><input type="number" id="settings-current-week" value="12" min="1" max="15" class="form-input"><span>of <span id="settings-total-weeks">15</span> Weeks</span></div></div>
+                <div class="form-group"><label>Exam Eligibility Threshold (%)</label><input type="number" id="settings-threshold" value="80.0" min="50" max="100" step="0.5" class="form-input"><small class="form-hint">Standard ITUM minimum: 80.0%</small></div>
+                <div class="policy-box"><h4>Safe Absent (Medical Certificate) Rule:</h4><p>Producing an approved medical certificate grants "Safe Absent" status, deducting the session from the effective denominator:</p><code>Effective Total = Planned Sessions - Approved Medical Absents</code></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ==================== DAY LOG MODAL ==================== -->
+  <div id="day-modal" class="modal-overlay day-log-modal-overlay hidden" aria-hidden="true">
+    <div class="day-log-modal-box">
+      <div class="day-modal-header">
+        <div class="day-modal-title-group">
+          <div class="modal-header-badge">ITUM Daily Attendance Log</div>
+          <h3 id="day-modal-title" class="day-modal-title">Attendance Log: Monday, Nov 9, 2026</h3>
+          <p id="modal-date-subheading" class="day-modal-subtitle">Mark attendance for scheduled lectures.</p>
+        </div>
+        <button class="modal-close-btn" id="day-modal-close-btn" data-close-modal="day-modal" aria-label="Close attendance dialog">✕</button>
+      </div>
+      <div class="modal-quick-actions">
+        <label class="modal-date-label" for="day-modal-date">Attendance date</label>
+        <input type="date" id="day-modal-date" class="form-control">
+        <button class="btn btn-sm btn-outline-green" id="mark-all-present-btn">✓ Mark All Present</button>
+        <span class="modal-weekend-warning hidden" id="modal-non-instructional-note">⚠️ Outside normal lecture schedule.</span>
+      </div>
+      <div class="day-modules-list" id="day-modal-rows"></div>
+      <div class="day-modal-notes-section">
+        <label>Session Notes / Medical Certificate Reference:</label>
+        <textarea id="day-notes-input" placeholder="e.g. MC-2026-092 submitted to ITUM Health Centre" rows="2"></textarea>
+      </div>
+      <div class="day-modal-footer">
+        <button class="btn btn-secondary" data-close-modal="day-modal">Cancel</button>
+        <button class="btn btn-primary btn-large" id="day-modal-save-btn">Save Attendance Log</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
