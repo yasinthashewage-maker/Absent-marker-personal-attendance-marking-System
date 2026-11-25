@@ -97,7 +97,7 @@ TOKEN_TTL_HOURS = 24 * 7  # 7-day tokens
 def create_token(student_id: int) -> str:
     """Generate a signed JWT for the given student ID."""
     payload = {
-        "sub": student_id,
+        "sub": str(student_id),
         "iat": datetime.now(timezone.utc),
         "exp": datetime.now(timezone.utc) + timedelta(hours=TOKEN_TTL_HOURS),
     }
@@ -110,10 +110,20 @@ def decode_token(token: str):
     Supports current and legacy secret keys.
     """
     try:
-        return jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+        return jwt.decode(
+            token,
+            app.config["SECRET_KEY"],
+            algorithms=["HS256"],
+            options={"verify_sub": False},
+        )
     except Exception:
         try:
-            return jwt.decode(token, "absent-marker-dev-secret-2026", algorithms=["HS256"])
+            return jwt.decode(
+                token,
+                "absent-marker-dev-secret-2026",
+                algorithms=["HS256"],
+                options={"verify_sub": False},
+            )
         except Exception:
             return None
 
@@ -122,21 +132,27 @@ def login_required(f):
     """
     Decorator: extracts + verifies Bearer token from Authorization header.
     Sets `g.student_id` on success.
-    Gracefully falls back to active student if token missing or invalid.
     """
     @wraps(f)
     def decorated(*args, **kwargs):
         auth_header = request.headers.get("Authorization", "")
-        if auth_header.startswith("Bearer "):
-            token   = auth_header.split(" ", 1)[1]
-            payload = decode_token(token)
-            if payload and "sub" in payload:
-                g.student_id = payload["sub"]
-                return f(*args, **kwargs)
+        if not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Authentication required"}), 401
 
-        # Graceful fallback to Sadee or first student in DB
-        s = query_db("SELECT id FROM students WHERE email='sadee.itum@gmail.com'", one=True)
-        g.student_id = s["id"] if s else 1
+        payload = decode_token(auth_header.split(" ", 1)[1])
+        try:
+            student_id = int(payload["sub"]) if payload else None
+        except (KeyError, TypeError, ValueError):
+            student_id = None
+
+        if student_id is None:
+            return jsonify({"error": "Invalid or expired token"}), 401
+
+        student = query_db("SELECT id FROM students WHERE id=?", (student_id,), one=True)
+        if not student:
+            return jsonify({"error": "Student not found"}), 401
+
+        g.student_id = student["id"]
         return f(*args, **kwargs)
     return decorated
 
@@ -242,28 +258,27 @@ def register():
     if not email:
         email = f"student_{int(datetime.now().timestamp())}@student.itum.mrt.ac.lk"
 
-    # Check uniqueness by email or reg_number
+    # Do not let registration overwrite an existing account's name or password.
     existing = query_db(
-        "SELECT * FROM students WHERE LOWER(email)=? OR (reg_number IS NOT NULL AND LOWER(reg_number)=?)",
-        (email, email),
+        "SELECT id FROM students WHERE LOWER(email)=? OR (? IS NOT NULL AND LOWER(reg_number)=?)",
+        (email, reg_number.lower() if reg_number else None, reg_number.lower() if reg_number else None),
         one=True,
     )
     if existing:
-        sid = existing["id"]
-        mutate_db("UPDATE students SET full_name=?, password_hash=? WHERE id=?", (full_name, generate_password_hash(password), sid))
-    else:
-        password_hash = generate_password_hash(password)
-        sid = mutate_db(
-            "INSERT INTO students (full_name, email, password_hash, reg_number) VALUES (?,?,?,?)",
-            (full_name, email, password_hash, reg_number),
+        return jsonify({"error": "An account with this email or registration number already exists"}), 409
+
+    password_hash = generate_password_hash(password)
+    sid = mutate_db(
+        "INSERT INTO students (full_name, email, password_hash, reg_number) VALUES (?,?,?,?)",
+        (full_name, email, password_hash, reg_number),
+    )
+    # Seed attendance records for this new student from existing sample records
+    template_records = query_db("SELECT module_id, date, status, is_medical, mc_reference, notes FROM attendance_records WHERE student_id=2") or query_db("SELECT module_id, date, status, is_medical, mc_reference, notes FROM attendance_records WHERE student_id=1")
+    for tr in template_records:
+        mutate_db(
+            "INSERT OR IGNORE INTO attendance_records (student_id, module_id, date, status, is_medical, mc_reference, notes) VALUES (?,?,?,?,?,?,?)",
+            (sid, tr["module_id"], tr["date"], tr["status"], tr["is_medical"], tr["mc_reference"], tr["notes"]),
         )
-        # Seed attendance records for this new student from existing sample records
-        template_records = query_db("SELECT module_id, date, status, is_medical, mc_reference, notes FROM attendance_records WHERE student_id=2") or query_db("SELECT module_id, date, status, is_medical, mc_reference, notes FROM attendance_records WHERE student_id=1")
-        for tr in template_records:
-            mutate_db(
-                "INSERT OR IGNORE INTO attendance_records (student_id, module_id, date, status, is_medical, mc_reference, notes) VALUES (?,?,?,?,?,?,?)",
-                (sid, tr["module_id"], tr["date"], tr["status"], tr["is_medical"], tr["mc_reference"], tr["notes"]),
-            )
 
     student = query_db("SELECT * FROM students WHERE id=?", (sid,), one=True)
     token   = create_token(sid)
@@ -298,26 +313,8 @@ def login():
         elif email in ["yasintha", "yasintha perera"]:
             student = query_db("SELECT * FROM students WHERE email='yasintha@student.itum.mrt.ac.lk'", one=True)
 
-    # 3. If student not yet registered, auto-provision so user can immediately sign in!
-    if not student:
-        display_name = email.split('@')[0].replace('.', ' ').title() if '@' in email else email.upper()
-        clean_email  = email if '@' in email else f"{email.lower()}@student.itum.mrt.ac.lk"
-        clean_reg    = email.upper() if not '@' in email else None
-        pwd_hash     = generate_password_hash(password or "password123")
-        try:
-            sid = mutate_db(
-                "INSERT INTO students (full_name, email, password_hash, reg_number) VALUES (?,?,?,?)",
-                (display_name, clean_email, pwd_hash, clean_reg),
-            )
-            template_records = query_db("SELECT module_id, date, status, is_medical, mc_reference, notes FROM attendance_records WHERE student_id=2") or query_db("SELECT module_id, date, status, is_medical, mc_reference, notes FROM attendance_records WHERE student_id=1")
-            for tr in template_records:
-                mutate_db(
-                    "INSERT OR IGNORE INTO attendance_records (student_id, module_id, date, status, is_medical, mc_reference, notes) VALUES (?,?,?,?,?,?,?)",
-                    (sid, tr["module_id"], tr["date"], tr["status"], tr["is_medical"], tr["mc_reference"], tr["notes"]),
-                )
-            student = query_db("SELECT * FROM students WHERE id=?", (sid,), one=True)
-        except Exception:
-            student = query_db("SELECT * FROM students ORDER BY id LIMIT 1", one=True)
+    if not student or not student["password_hash"] or not password or not check_password_hash(student["password_hash"], password):
+        return jsonify({"error": "Invalid email/registration number or password"}), 401
 
     token = create_token(student["id"])
     return jsonify({"token": token, "student": row_to_student(student)}), 200

@@ -5031,17 +5031,14 @@ body.dark-mode #view-settings .policy-box {
 }
 
 #view-modules .data-table th:first-child {
-  width: 20%;
+  width: 22%;
 }
 
 #view-modules .data-table th:nth-child(2) {
   width: 6%;
 }
 
-#view-modules .data-table th:nth-child(3),
-#view-modules .data-table th:nth-child(8),
-#view-modules .data-table th:nth-child(9),
-#view-modules .data-table th:nth-child(10) {
+#view-modules .data-table th:nth-child(3) {
   width: 9%;
 }
 
@@ -5052,8 +5049,13 @@ body.dark-mode #view-settings .policy-box {
   width: 8%;
 }
 
-#view-modules .data-table th:last-child {
-  width: 6%;
+#view-modules .data-table th:nth-child(8),
+#view-modules .data-table th:nth-child(9) {
+  width: 10%;
+}
+
+#view-modules .data-table th:nth-child(10) {
+  width: 11%;
 }
 
 #view-modules .data-table tbody td {

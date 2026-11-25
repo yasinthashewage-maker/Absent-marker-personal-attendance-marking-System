@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <title>🌿 ABSENT MARKER - ITUM Student Attendance Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -116,8 +117,8 @@
             <input type="password" id="reg-password" class="form-control" placeholder="••••••••" required autocomplete="new-password">
           </div>
           <div class="form-group">
-            <label for="reg-number">Registration Number</label>
-            <input type="text" id="reg-number" class="form-control" placeholder="" autocomplete="off">
+            <label for="reg-confirm-password">Confirm Password</label>
+            <input type="password" id="reg-confirm-password" class="form-control" placeholder="••••••••" required autocomplete="new-password">
           </div>
           <button type="submit" class="btn-auth-submit">Register</button>
         </form>
@@ -347,7 +348,7 @@
           <div class="card table-card">
             <div class="table-responsive">
               <table class="data-table" id="all-modules-table">
-                <thead><tr><th>Module Code &amp; Name</th><th>Credits</th><th>Conducted</th><th>Present</th><th>Unexcused</th><th>Safe (MC)</th><th>Effective</th><th>Attendance %</th><th>Allowed Left</th><th>Status</th><th>Action</th></tr></thead>
+                <thead><tr><th>Module Code &amp; Name</th><th>Credits</th><th>Conducted</th><th>Present</th><th>Unexcused</th><th>Safe (MC)</th><th>Effective</th><th>Attendance %</th><th>Allowed Left</th><th>Status</th></tr></thead>
                 <tbody id="modules-tbody"></tbody>
               </table>
             </div>

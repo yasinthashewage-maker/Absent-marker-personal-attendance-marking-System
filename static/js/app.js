@@ -3,10 +3,19 @@
  * Main SPA Controller (Vanilla JS ES6+)
  * ========================================
  * All views are rendered as #id divs inside index.html.
- * API calls go to the Flask backend at the same origin via fetch().
+ * Auth, dashboard summaries, profile, and calendar use Flask; module logging uses Supabase.
  */
 
 'use strict';
+
+// Configure these with the Project URL and publishable/anon key from Supabase.
+const SUPABASE_URL = 'https://gpwytctrbioyblftfxjb.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_2Ui6mjz0ezYozK7T2ixvGQ_RrMTE0vc';
+const supabaseClient = window.supabase?.createClient &&
+  SUPABASE_URL &&
+  SUPABASE_ANON_KEY
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 
 // ============================================================
 // GLOBAL STATE
@@ -69,6 +78,212 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     throw new Error(msg);
   }
   return data;
+}
+
+function requireSupabaseClient() {
+  if (!window.supabase?.createClient) {
+    throw new Error('Supabase client library is not loaded.');
+  }
+  if (!supabaseClient) {
+    throw new Error('Set SUPABASE_URL and SUPABASE_ANON_KEY in static/js/app.js before using attendance.');
+  }
+  return supabaseClient;
+}
+
+/**
+ * Calculate attendance metrics and adapt a Supabase module row to the UI shape.
+ * @param {object} mod
+ * @returns {object}
+ */
+function calculateModuleMetrics(mod) {
+  const conductedSessions = Number(mod.conducted_sessions) || 0;
+  const presentCount = Number(mod.present_count) || 0;
+  const safeMcCount = Number(mod.safe_mc_count) || 0;
+  const unexcusedCount = Number(mod.unexcused_count) || 0;
+  const effectiveSessions = Math.max(0, conductedSessions - safeMcCount);
+  const percentage = effectiveSessions > 0
+    ? Number(((presentCount / effectiveSessions) * 100).toFixed(1))
+    : 100.0;
+
+  let status = 'Eligible';
+  if (percentage < 80) {
+    status = 'Critical';
+  } else if (percentage < 85) {
+    status = 'Warning';
+  }
+
+  return {
+    ...mod,
+    module_id: mod.id ?? mod.module_id,
+    code: mod.module_code ?? mod.code,
+    name: mod.module_name ?? mod.name,
+    conducted: conductedSessions,
+    present: presentCount,
+    absent_unexcused: unexcusedCount,
+    absent_mc: safeMcCount,
+    effective_total: effectiveSessions,
+    attendance_pct: percentage,
+    allowed_left: Math.max(0, Math.floor(effectiveSessions * 0.2) - unexcusedCount),
+    effectiveSessions,
+    percentage,
+    status
+  };
+}
+
+/**
+ * Load modules and their stored attendance totals from Supabase.
+ * @returns {Promise<object[]>}
+ */
+async function fetchModulesFromSupabase() {
+  const client = requireSupabaseClient();
+  const { data, error } = await client
+    .from('modules')
+    .select('*')
+    .order('module_code', { ascending: true });
+
+  if (error) {
+    console.error('Error loading modules:', error.message);
+    throw new Error(`Error loading modules: ${error.message}`);
+  }
+
+  return data.map(calculateModuleMetrics);
+}
+
+/**
+ * Update the app state and all views that display module attendance.
+ * @param {object[]} modules
+ */
+function renderSupabaseModules(modules) {
+  APP.attendanceSummary = modules;
+  APP.modules = modules;
+  renderTodaySchedule();
+  renderAttendanceChart();
+  renderModulesTable(modules);
+  renderRiskCards(modules, currentRiskFilter());
+  if (APP.semesterConfig) updateStatusBanner(APP.semesterConfig);
+}
+
+/**
+ * Save one attendance record and synchronize the module totals in Supabase.
+ * @param {object} params
+ * @param {boolean} [refreshViews=true]
+ * @returns {Promise<object[]|object>}
+ */
+async function saveAttendanceLog({
+  moduleId,
+  logDate,
+  status,
+  hasMC = false,
+  mcReason = 'Medical Certificate'
+}, refreshViews = true) {
+  const client = requireSupabaseClient();
+  const allowedStatuses = ['PRESENT', 'ABSENT', 'NO_CLASS'];
+  if (!moduleId || !logDate || !allowedStatuses.includes(status)) {
+    throw new Error('A module, date, and valid attendance status are required.');
+  }
+
+  const isSafeAbsent = status === 'ABSENT' && hasMC;
+  const { data: record, error: recordError } = await client
+    .from('attendance_records')
+    .upsert({
+      module_id: moduleId,
+      log_date: logDate,
+      status,
+      is_safe_absent: isSafeAbsent
+    }, { onConflict: 'module_id,log_date' })
+    .select()
+    .single();
+
+  if (recordError) {
+    console.error('Error saving attendance record:', recordError.message);
+    throw new Error(`Error saving attendance record: ${recordError.message}`);
+  }
+
+  if (isSafeAbsent) {
+    const { error: mcError } = await client
+      .from('medical_certificates')
+      .upsert({
+        attendance_record_id: record.id,
+        issue_date: logDate,
+        reason: mcReason,
+        is_verified: true
+      }, { onConflict: 'attendance_record_id' });
+
+    if (mcError) {
+      console.error('Error saving medical certificate:', mcError.message);
+      throw new Error(`Error saving medical certificate: ${mcError.message}`);
+    }
+  } else {
+    const { error: mcDeleteError } = await client
+      .from('medical_certificates')
+      .delete()
+      .eq('attendance_record_id', record.id);
+
+    if (mcDeleteError) {
+      console.error('Error removing medical certificate:', mcDeleteError.message);
+      throw new Error(`Error removing medical certificate: ${mcDeleteError.message}`);
+    }
+  }
+
+  await recalculateAndSyncModule(moduleId);
+  if (refreshViews) {
+    const updatedModules = await fetchModulesFromSupabase();
+    renderSupabaseModules(updatedModules);
+    return updatedModules;
+  }
+  return record;
+}
+
+/**
+ * Recompute and persist module counts from its attendance records.
+ * @param {string|number} moduleId
+ */
+async function recalculateAndSyncModule(moduleId) {
+  const client = requireSupabaseClient();
+  const { data: records, error } = await client
+    .from('attendance_records')
+    .select('status, is_safe_absent')
+    .eq('module_id', moduleId);
+
+  if (error) {
+    console.error('Error fetching records for recalculation:', error.message);
+    throw new Error(`Error fetching records for recalculation: ${error.message}`);
+  }
+
+  let conducted = 0;
+  let present = 0;
+  let unexcused = 0;
+  let safeMc = 0;
+
+  for (const row of records) {
+    if (row.status === 'NO_CLASS') continue;
+
+    conducted += 1;
+    if (row.status === 'PRESENT') {
+      present += 1;
+    } else if (row.status === 'ABSENT') {
+      if (row.is_safe_absent) {
+        safeMc += 1;
+      } else {
+        unexcused += 1;
+      }
+    }
+  }
+
+  const { error: updateError } = await client
+    .from('modules')
+    .update({
+      conducted_sessions: conducted,
+      present_count: present,
+      unexcused_count: unexcused,
+      safe_mc_count: safeMc
+    })
+    .eq('id', moduleId);
+
+  if (updateError) {
+    console.error('Error updating module counts:', updateError.message);
+    throw new Error(`Error updating module counts: ${updateError.message}`);
+  }
 }
 
 /**
@@ -337,6 +552,7 @@ async function handleSignIn(e) {
     APP.user  = data.student || data.user;
     localStorage.setItem('absentMarkerToken', APP.token);
     closeModal('signin-modal');
+    updateStatusBanner(APP.semesterConfig);
     await loadDashboard();
     showToast(`Welcome back, ${APP.user.full_name || 'Student'}!`, 'success');
   } catch (err) {
@@ -354,19 +570,25 @@ async function handleRegister(e) {
   const full_name  = form.querySelector('#reg-name')?.value.trim();
   const email      = form.querySelector('#reg-email')?.value.trim();
   const password   = form.querySelector('#reg-password')?.value;
-  const reg_number = form.querySelector('#reg-number')?.value.trim();
+  const confirmPassword = form.querySelector('#reg-confirm-password')?.value;
 
-  if (!full_name || !email || !password) {
+  if (!full_name || !email || !password || !confirmPassword) {
     showToast('Please fill in all required fields.', 'warning');
     return;
   }
 
+  if (password !== confirmPassword) {
+    showToast('Passwords do not match.', 'warning');
+    return;
+  }
+
   try {
-    const data = await apiCall('/api/auth/register', 'POST', { full_name, email, password, reg_number });
+    const data = await apiCall('/api/auth/register', 'POST', { full_name, email, password });
     APP.token = data.token;
     APP.user  = data.student || data.user;
     localStorage.setItem('absentMarkerToken', APP.token);
     closeModal('signin-modal');
+    updateStatusBanner(APP.semesterConfig);
     await loadDashboard();
     showToast(`Account created! Welcome, ${APP.user.full_name}!`, 'success');
   } catch (err) {
@@ -399,22 +621,28 @@ async function loadDashboard() {
   showView('dashboard');
 
   try {
-    const [meData, summaryData, configData] = await Promise.all([
+    const [meData, configData] = await Promise.all([
       apiCall('/api/auth/me'),
-      apiCall('/api/attendance/summary'),
       apiCall('/api/semester/config')
     ]);
 
     APP.user = meData.student || meData;
-    APP.attendanceSummary = summaryData.modules || summaryData || [];
     APP.semesterConfig = configData;
-    APP.modules = APP.attendanceSummary;
+  } catch (err) {
+    showToast(`Profile loading error: ${err.message}`, 'error');
+  }
 
-    updateStatusBanner(configData);
+  updateStatusBanner(APP.semesterConfig);
+
+  try {
+    const modules = await apiCall('/api/attendance/summary');
+    APP.attendanceSummary = modules;
+    APP.modules = modules;
+    updateStatusBanner(APP.semesterConfig);
     renderTodaySchedule();
     renderAttendanceChart();
   } catch (err) {
-    showToast(`Dashboard error: ${err.message}`, 'error');
+    showToast(`Dashboard attendance error: ${err.message}`, 'error');
   }
 }
 
@@ -465,6 +693,8 @@ function updateStatusBanner(config) {
 
   const userNameEl = document.getElementById('nav-user-name');
   if (userNameEl) userNameEl.textContent = firstName;
+  const menuNameEl = document.getElementById('menu-user-fullname');
+  if (menuNameEl) menuNameEl.textContent = user.full_name || 'Student';
   const sidebarNameEl = document.getElementById('sidebar-user-fullname');
   if (sidebarNameEl) sidebarNameEl.textContent = user.full_name || 'Student';
   const sidebarAvatar = document.querySelector('.sidebar-avatar-large');
@@ -759,7 +989,7 @@ function renderCalendarFooter() {
  * Open the day modal for a specific date.
  * @param {string} dateStr  YYYY-MM-DD
  */
-function openDayModal(dateStr) {
+async function openDayModal(dateStr) {
   const modal = document.getElementById('day-modal');
   if (!modal) return;
 
@@ -772,7 +1002,17 @@ function openDayModal(dateStr) {
   const rowsContainer = document.getElementById('day-modal-rows');
   if (!rowsContainer) return;
 
-  const dayInfo = APP.calendarData[dateStr];
+  let dayInfo = APP.calendarData[dateStr];
+  if (!dayInfo) {
+    try {
+      const [year, month] = dateStr.split('-').map(Number);
+      const calendar = await apiCall(`/api/attendance/calendar/${year}/${month}`);
+      dayInfo = calendar.dates?.[dateStr];
+    } catch (err) {
+      showToast(`Attendance records error: ${err.message}`, 'error');
+      return;
+    }
+  }
   const existingRecords = dayInfo?.modules || [];
 
   const recordMap = {};
@@ -805,7 +1045,7 @@ function openDayModal(dateStr) {
 function initModuleRow(module, currentStatus, record = {}) {
   const isMC   = record.is_medical ? 'checked' : '';
   const mcRef  = record.mc_reference || '';
-  const showMC = currentStatus === 'absent' ? '' : 'display:none;';
+  const showMC = currentStatus === 'absent' ? ' open' : '';
 
   const statusBtn = (val, label, icon) => {
     const isActive = currentStatus === val ? 'btn-status-active' : '';
@@ -829,7 +1069,7 @@ function initModuleRow(module, currentStatus, record = {}) {
         ${statusBtn('absent',   'Absent',   '✗')}
         ${statusBtn('no_class', 'No Class', '—')}
       </div>
-      <div class="mc-section" id="mc-${module.module_id}" style="${showMC}">
+      <div class="mc-section${showMC}" id="mc-${module.module_id}">
         <label class="mc-label">
           <input type="checkbox" class="mc-toggle" data-module-id="${module.module_id}" ${isMC}>
           Mark as Medical Certificate (MC)
@@ -858,7 +1098,7 @@ function selectModuleStatus(btn, moduleId) {
   const mcSection = document.getElementById(`mc-${moduleId}`);
   if (mcSection) {
     const isAbsent = btn.dataset.status === 'absent';
-    mcSection.style.display = isAbsent ? '' : 'none';
+    mcSection.classList.toggle('open', isAbsent);
     if (!isAbsent) {
       const toggle = mcSection.querySelector('.mc-toggle');
       if (toggle) toggle.checked = false;
@@ -867,7 +1107,7 @@ function selectModuleStatus(btn, moduleId) {
 }
 
 /**
- * Collect all module statuses from the day modal and POST to backend.
+ * Collect all module statuses from the day modal and save them to Flask.
  */
 async function saveDayAttendance() {
   const dateInput = document.getElementById('day-modal-date');
@@ -884,26 +1124,29 @@ async function saveDayAttendance() {
     const mcToggle    = row.querySelector('.mc-toggle');
     const mcRefInput  = row.querySelector('.mc-ref-input');
     const isMedical   = mcToggle?.checked ? 1 : 0;
-    const mcRef       = mcRefInput?.value.trim() || '';
+    const mcReference = mcRefInput?.value.trim() || '';
 
-    records.push({ module_id: moduleId, status, is_medical: isMedical, mc_reference: mcRef });
+    records.push({
+      module_id: moduleId,
+      status,
+      is_medical: isMedical,
+      mc_reference: mcReference
+    });
   });
 
   try {
-    await apiCall('/api/attendance/log', 'POST', { date, records });
+    const result = await apiCall('/api/attendance/log', 'POST', { date, records });
+    APP.attendanceSummary = result.summary || [];
+    APP.modules = APP.attendanceSummary;
     closeModal('day-modal');
     showToast('Attendance saved!', 'success');
 
-    // Refresh summary and affected views
-    const summaryData = await apiCall('/api/attendance/summary');
-    APP.attendanceSummary = summaryData.modules || summaryData || [];
-    APP.modules = APP.attendanceSummary;
-
     await loadCalendar(APP.currentYear, APP.currentMonth);
     if (APP.currentView === 'modules') renderModulesTable(APP.attendanceSummary);
-    if (APP.currentView === 'risk')    renderRiskCards(APP.attendanceSummary, currentRiskFilter());
+    if (APP.currentView === 'risk') renderRiskCards(APP.attendanceSummary, currentRiskFilter());
     if (APP.currentView === 'dashboard') {
       updateStatusBanner(APP.semesterConfig);
+      renderTodaySchedule();
       renderAttendanceChart();
     }
   } catch (err) {
@@ -939,10 +1182,10 @@ function currentRiskFilter() {
 async function loadModules() {
   showView('modules');
   try {
-    const data = await apiCall('/api/attendance/summary');
-    APP.attendanceSummary = data.modules || data || [];
-    APP.modules = APP.attendanceSummary;
-    renderModulesTable(APP.attendanceSummary);
+    const modules = await apiCall('/api/attendance/summary');
+    APP.attendanceSummary = modules;
+    APP.modules = modules;
+    renderModulesTable(modules);
   } catch (err) {
     showToast(`Modules error: ${err.message}`, 'error');
   }
@@ -957,7 +1200,7 @@ function renderModulesTable(data) {
   if (!tbody) return;
 
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="11" class="empty-state">No modules found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No modules found.</td></tr>';
     return;
   }
 
@@ -1004,9 +1247,6 @@ function renderModulesTable(data) {
         </td>
         <td class="module-value">
           <span class="module-status module-status--${statusClass}">${status}</span>
-        </td>
-        <td class="module-value">
-          <button class="module-log-button" onclick="openDayModal('${todayStr()}')">Log</button>
         </td>
       </tr>
     `;
@@ -1078,9 +1318,9 @@ async function loadRiskView() {
 
   if (!APP.attendanceSummary.length) {
     try {
-      const data = await apiCall('/api/attendance/summary');
-      APP.attendanceSummary = data.modules || data || [];
-      APP.modules = APP.attendanceSummary;
+      const modules = await fetchModulesFromSupabase();
+      APP.attendanceSummary = modules;
+      APP.modules = modules;
     } catch (err) {
       showToast(`Risk view error: ${err.message}`, 'error');
       return;
@@ -1297,8 +1537,9 @@ async function saveProfile(e) {
   const reg_number = form.querySelector('#settings-reg')?.value.trim();
 
   try {
-    await apiCall('/api/profile', 'PUT', { full_name, email, reg_number });
-    APP.user = { ...APP.user, full_name, email, reg_number };
+    const response = await apiCall('/api/profile', 'PUT', { full_name, email, reg_number });
+    APP.user = response.student || { ...APP.user, full_name, email, reg_number };
+    updateStatusBanner(APP.semesterConfig);
     showToast('Profile updated successfully!', 'success');
   } catch (err) {
     showToast(`Update failed: ${err.message}`, 'error');
